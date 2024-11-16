@@ -1,0 +1,9 @@
+> node src/index.js
+
+node:internal/modules/cjs/loader:1228
+  throw err;
+  ^
+
+Error: Cannot find module './src/app'
+Require stack:
+- /Users/mark/src/catalk/server/src/index.js
