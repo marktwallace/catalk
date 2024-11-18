@@ -3,6 +3,7 @@ const nacl = require('tweetnacl');
 nacl.util = require('tweetnacl-util');
 
 const PRIVATE_KEY_BASE64 = process.env.CATALK_PRIVATE_KEY;
+const PUBLIC_KEY_BASE64 = process.env.CATALK_PUBLIC_KEY;
 
 /* TEST WITH:
 curl -X POST http://localhost:3000/api/create-invite \
@@ -55,8 +56,6 @@ curl -X POST http://localhost:3000/api/accept-invite \
   -H "Content-Type: application/json" \
   -d '{"inviteToken": "your_invite_token_here", "publicKey": "your_public_key_here"}'
 */
-// Read the public key from the file
-const PUBLIC_KEY_BASE64 = process.env.CATALK_PUBLIC_KEY;
 
 exports.acceptInvite = (req, res) => {
   const { inviteToken } = req.body;
