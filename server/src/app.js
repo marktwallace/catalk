@@ -1,3 +1,4 @@
+// src/app.js
 import express from 'express';
 import morgan from 'morgan'; // For logging
 import cors from 'cors'; // For Cross-Origin Resource Sharing

@@ -1,6 +1,7 @@
 // src/controllers/authController.js
 import nacl from 'tweetnacl';
 import { createJWT } from '../utils/jwt.js';
+import messageService from '../services/messageService.js';
 
 const PRIVATE_KEY_BASE64 = process.env.CATALK_PRIVATE_KEY;
 const PUBLIC_KEY_BASE64 = process.env.CATALK_PUBLIC_KEY;
@@ -78,7 +79,6 @@ export function confirmLogin(req, res) {
 
     // Check if the nonce has expired
     if (Date.now() > expiresAt) {
-      // Delete the expired nonce
       nonces.delete(publicKey);
       return res.status(400).json({ error: 'Nonce has expired' });
     }
@@ -114,10 +114,21 @@ export function confirmLogin(req, res) {
     // Delete the nonce as it's no longer needed
     nonces.delete(publicKey);
 
+    // Announce the user login over the WebSocket using the MessageService
+    const announcement = {
+      type: 'user_login',
+      publicKey,
+      friendlyName: 'UserFriendlyNameHere', // Replace with actual user's friendly name
+      privilege: 'standard', // Replace with actual privilege level
+      timestamp: Date.now(),
+    };
+
+    messageService.broadcastMessage(announcement, serverPrivateKeyUint8);
+
     // Return the JWT to the client
     res.status(200).json({ sessionToken: jwt });
   } catch (error) {
     console.error('Error in confirmLogin:', error.message);
     res.status(500).json({ error: 'Internal server error' });
   }
-};
+}
