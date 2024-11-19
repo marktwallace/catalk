@@ -1,9 +1,9 @@
-const express = require('express');
-const morgan = require('morgan'); // For logging
-const cors = require('cors'); // For Cross-Origin Resource Sharing
-const helmet = require('helmet'); // For security headers
-const routes = require('./routes');
-const { notFoundHandler, errorHandler } = require('./middlewares/errorHandlers');
+import express from 'express';
+import morgan from 'morgan'; // For logging
+import cors from 'cors'; // For Cross-Origin Resource Sharing
+import helmet from 'helmet'; // For security headers
+import routes from './routes.js';
+import { notFoundHandler, errorHandler } from './middlewares/errorHandlers.js';
 
 const app = express();
 
@@ -23,4 +23,4 @@ app.use(notFoundHandler);
 // Global Error Handler
 app.use(errorHandler);
 
-module.exports = app;
+export default app;

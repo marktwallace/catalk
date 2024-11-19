@@ -1,17 +1,20 @@
 // src/controllers/inviteController.js
-const nacl = require('tweetnacl');
-nacl.util = require('tweetnacl-util');
+import nacl from 'tweetnacl';
 
 const PRIVATE_KEY_BASE64 = process.env.CATALK_PRIVATE_KEY;
 const PUBLIC_KEY_BASE64 = process.env.CATALK_PUBLIC_KEY;
+const serverPrivateKeyUint8 = Uint8Array.from(Buffer.from(PRIVATE_KEY_BASE64, 'base64'));
+const serverPublicKeyUint8 = Uint8Array.from(Buffer.from(PUBLIC_KEY_BASE64, 'base64'));
+console.log('Decoded private key length:', serverPrivateKeyUint8.length); // Should be 64
+console.log('Decoded public key length:', serverPublicKeyUint8.length); // Should be 32
 
 /* TEST WITH:
-curl -X POST http://localhost:3000/api/create-invite \
+curl -X POST http://localhost:6765/api/create-invite \
   -H "Authorization: $CATALK_OWNER_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"privileges": "read-write"}'
 */
-exports.createInvite = (req, res) => {
+export async function createInvite(req, res) {
   const ownerToken = req.headers['authorization'];
 
   if (ownerToken !== process.env.CATALK_OWNER_TOKEN) {
@@ -26,23 +29,14 @@ exports.createInvite = (req, res) => {
 
   const timestamp = Math.floor(Date.now() / 1000);
   const inviteString = `${privileges}|${timestamp}`;
-  const inviteBuffer = nacl.util.decodeUTF8(inviteString);
+  const inviteBuffer = new TextEncoder().encode(inviteString);
 
   try {
-    // Convert the private key seed from base64 to a Uint8Array
-    const privateKeySeed = nacl.util.decodeBase64(PRIVATE_KEY_BASE64);
+    // Use the 64-byte private key directly for signing
+    const signature = nacl.sign.detached(inviteBuffer, serverPrivateKeyUint8);
+    const signatureBase64 = Buffer.from(signature).toString('base64');
 
-    // Generate the key pair from the private key seed
-    const keyPair = nacl.sign.keyPair.fromSeed(privateKeySeed);
-
-    // Use the 64-byte secret key for signing
-    const secretKey = keyPair.secretKey;
-
-    // Sign the invite using Ed25519
-    const signature = nacl.sign.detached(inviteBuffer, secretKey);
-    const signatureBase64 = nacl.util.encodeBase64(signature);
-
-    const inviteToken = `${nacl.util.encodeBase64(inviteBuffer)}.${signatureBase64}`;
+    const inviteToken = `${Buffer.from(inviteBuffer).toString('base64')}.${signatureBase64}`;
 
     res.json({ invite: inviteToken });
   } catch (error) {
@@ -52,12 +46,12 @@ exports.createInvite = (req, res) => {
 };
 
 /* TEST WITH:
-curl -X POST http://localhost:3000/api/accept-invite \
+curl -X POST http://localhost:6765/api/accept-invite \
   -H "Content-Type: application/json" \
   -d '{"inviteToken": "your_invite_token_here", "publicKey": "your_public_key_here"}'
 */
 
-exports.acceptInvite = (req, res) => {
+export async function acceptInvite(req, res) {
   const { inviteToken } = req.body;
 
   if (!inviteToken) {
@@ -71,12 +65,11 @@ exports.acceptInvite = (req, res) => {
 
   try {
     // Attempt to decode Base64 inputs
-    const inviteData = nacl.util.decodeBase64(inviteDataBase64);
-    const providedSignature = nacl.util.decodeBase64(providedSignatureBase64);
-    const publicKeyUint8 = nacl.util.decodeBase64(PUBLIC_KEY_BASE64);
+    const inviteData = Uint8Array.from(Buffer.from(inviteDataBase64, 'base64'));
+    const providedSignature = Uint8Array.from(Buffer.from(providedSignatureBase64, 'base64'));
 
     // Verify the signature using the public key
-    const isVerified = nacl.sign.detached.verify(inviteData, providedSignature, publicKeyUint8);
+    const isVerified = nacl.sign.detached.verify(inviteData, providedSignature, serverPublicKeyUint8);
 
     if (!isVerified) {
       return res.status(403).json({ error: 'Invalid invite token signature' });

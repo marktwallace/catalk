@@ -1,14 +1,11 @@
 // middlewares/authMiddleware.js
-const nacl = require('tweetnacl');
-nacl.util = require('tweetnacl-util');
-
-const { verifyJWT } = require('../utils/jwt');
+import { verifyJWT } from '../utils/jwt.js';
 
 // Load server's public key
 const SERVER_PUBLIC_KEY_BASE64 = process.env.SERVER_PUBLIC_KEY_BASE64;
-const serverPublicKeyUint8 = nacl.util.decodeBase64(SERVER_PUBLIC_KEY_BASE64);
+const serverPublicKeyUint8 = Uint8Array.from(Buffer.from(SERVER_PUBLIC_KEY_BASE64, 'base64'));
 
-exports.authMiddleware = (req, res, next) => {
+export function authMiddleware(req, res, next) {
   const authHeader = req.headers['authorization'];
 
   if (!authHeader) {

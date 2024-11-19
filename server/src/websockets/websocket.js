@@ -1,8 +1,8 @@
-const WebSocket = require('ws');
-const { handleExampleMessage } = require('./handlers/exampleHandler');
+import { WebSocketServer } from 'ws';
 
-const setupWebSocket = (server) => {
-    const wss = new WebSocket.Server({ server });
+export function setupWebSocket(server) {
+    // Create a WebSocket server attached to the provided HTTP server
+    const wss = new WebSocketServer({ server });
 
     wss.on('connection', (ws) => {
         console.log('New WebSocket connection');
@@ -23,6 +23,4 @@ const setupWebSocket = (server) => {
     });
 
     return wss;
-};
-
-module.exports = setupWebSocket;
+}

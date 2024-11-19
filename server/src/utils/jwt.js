@@ -1,9 +1,8 @@
 // utils/jwt.js
-const nacl = require('tweetnacl');
-nacl.util = require('tweetnacl-util');
+import nacl from 'tweetnacl';
 
 // Helper functions for base64url encoding and decoding
-function base64urlEncode(buffer) {
+export function base64urlEncode(buffer) {
   return Buffer.from(buffer)
     .toString('base64')
     .replace(/=/g, '')
@@ -11,7 +10,7 @@ function base64urlEncode(buffer) {
     .replace(/\//g, '_');
 }
 
-function base64urlDecode(str) {
+export function base64urlDecode(str) {
   // Pad with '=' to make the length a multiple of 4
   str = str.replace(/-/g, '+').replace(/_/g, '/');
   while (str.length % 4) {
@@ -21,7 +20,7 @@ function base64urlDecode(str) {
 }
 
 // Function to create a JWT
-function createJWT(header, payload, privateKeyUint8) {
+export function createJWT(header, payload, privateKeyUint8) {
   const headerJSON = JSON.stringify(header);
   const payloadJSON = JSON.stringify(payload);
 
@@ -42,7 +41,7 @@ function createJWT(header, payload, privateKeyUint8) {
 }
 
 // Function to verify a JWT
-function verifyJWT(jwt, publicKeyUint8) {
+export function verifyJWT(jwt, publicKeyUint8) {
   const parts = jwt.split('.');
 
   if (parts.length !== 3) {
@@ -73,11 +72,3 @@ function verifyJWT(jwt, publicKeyUint8) {
 
   return payload; // Return the payload if valid
 }
-
-// Export the functions
-module.exports = {
-  base64urlEncode,
-  base64urlDecode,
-  createJWT,
-  verifyJWT,
-};

@@ -1,12 +1,13 @@
 // src/controllers/authController.js
-const nacl = require('tweetnacl');
-nacl.util = require('tweetnacl-util');
-const { createJWT } = require('../utils/jwt');
+import nacl from 'tweetnacl';
+import { createJWT } from '../utils/jwt.js';
 
 const PRIVATE_KEY_BASE64 = process.env.CATALK_PRIVATE_KEY;
 const PUBLIC_KEY_BASE64 = process.env.CATALK_PUBLIC_KEY;
-const serverPrivateKeyUint8 = nacl.util.decodeBase64(PRIVATE_KEY_BASE64);
-const serverPublicKeyUint8 = nacl.util.decodeBase64(PUBLIC_KEY_BASE64);
+const serverPrivateKeyUint8 = Uint8Array.from(Buffer.from(PRIVATE_KEY_BASE64, 'base64'));
+const serverPublicKeyUint8 = Uint8Array.from(Buffer.from(PUBLIC_KEY_BASE64, 'base64'));
+console.log('Decoded private key length:', serverPrivateKeyUint8.length); // Should be 64
+console.log('Decoded public key length:', serverPublicKeyUint8.length); // Should be 32
 
 // In-memory storage with expiration (for nonces)
 const nonces = new Map(); // key: publicKeyBase64, value: { nonceBase64, expiresAt }
@@ -21,7 +22,7 @@ curl -X POST http://localhost:3000/api/login \
   -H "Content-Type: application/json" \
   -d '{"publicKey": "aLDNkzRVAj9o5dQ5cmfqeMGvJ2av33/rc111LKm5heo="}'
 */
-exports.login = (req, res) => {
+export function login(req, res) {
   const { publicKey } = req.body;
 
   if (!publicKey) {
@@ -30,7 +31,7 @@ exports.login = (req, res) => {
 
   try {
     // Decode the public key from base64 to Uint8Array
-    const publicKeyUint8 = nacl.util.decodeBase64(publicKey);
+    const publicKeyUint8 = Uint8Array.from(Buffer.from(publicKey, 'base64'));
 
     if (publicKeyUint8.length !== nacl.sign.publicKeyLength) {
       return res.status(400).json({ error: 'Invalid public key length' });
@@ -38,7 +39,7 @@ exports.login = (req, res) => {
 
     // Generate a nonce
     const nonce = nacl.randomBytes(24); // 24 bytes is arbitrary
-    const nonceBase64 = nacl.util.encodeBase64(nonce);
+    const nonceBase64 = Buffer.from(nonce).toString('base64');
 
     // Set expiration time for the nonce
     const expiresAt = Date.now() + NONCE_EXPIRATION_TIME;
@@ -58,7 +59,7 @@ exports.login = (req, res) => {
  * POST /api/confirm-login
  * Client sends the signature of the nonce to confirm login
  */
-exports.confirmLogin = (req, res) => {
+export function confirmLogin(req, res) {
   const { publicKey, signature } = req.body;
 
   if (!publicKey || !signature) {
@@ -83,9 +84,9 @@ exports.confirmLogin = (req, res) => {
     }
 
     // Decode the public key, signature, and nonce from base64
-    const publicKeyUint8 = nacl.util.decodeBase64(publicKey);
-    const signatureUint8 = nacl.util.decodeBase64(signature);
-    const nonceUint8 = nacl.util.decodeBase64(nonceBase64);
+    const publicKeyUint8 = Uint8Array.from(Buffer.from(publicKey, 'base64'));
+    const signatureUint8 = Uint8Array.from(Buffer.from(signature, 'base64'));
+    const nonceUint8 = Uint8Array.from(Buffer.from(nonceBase64, 'base64'));
 
     // Verify the signature of the nonce
     const isValid = nacl.sign.detached.verify(nonceUint8, signatureUint8, publicKeyUint8);

@@ -1,9 +1,9 @@
-require('dotenv').config();
-const http = require('http');
-const app = require('./app');
-const setupWebSocket = require('./websockets/websocket');
+import 'dotenv/config';
+import http from 'http';
+import app from './app.js';
+import { setupWebSocket } from './websockets/websocket.js';
 
-const { PORT = 3000 } = process.env;
+const { PORT = 6765 } = process.env;
 
 // Create HTTP server
 const server = http.createServer(app);
