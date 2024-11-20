@@ -1,4 +1,5 @@
 import { signMessage } from '../utils/sign.js';
+import WebSocket from 'ws';
 
 class MessageService {
   constructor() {
@@ -13,9 +14,9 @@ class MessageService {
     this.clients.delete(client);
   }
 
-  broadcastMessage(message, serverPrivateKeyUint8) {
+  broadcastMessage(message) {
     // Sign the message
-    const signedMessage = signMessage(message, serverPrivateKeyUint8);
+    const signedMessage = signMessage(message);
 
     console.log('Broadcasting message:', signedMessage);
     // Broadcast the signed message to all connected clients

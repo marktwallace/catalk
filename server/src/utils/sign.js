@@ -1,6 +1,9 @@
 import nacl from 'tweetnacl';
 
-function signMessage(message, serverPrivateKeyUint8) {
+const PRIVATE_KEY_BASE64 = process.env.CATALK_PRIVATE_KEY;
+const serverPrivateKeyUint8 = Uint8Array.from(Buffer.from(PRIVATE_KEY_BASE64, 'base64'));
+
+function signMessage(message) {
   const messageString = JSON.stringify(message);
   const messageUint8 = new TextEncoder().encode(messageString);
   const signatureUint8 = nacl.sign.detached(messageUint8, serverPrivateKeyUint8);

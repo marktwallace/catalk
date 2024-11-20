@@ -123,7 +123,7 @@ export function confirmLogin(req, res) {
       timestamp: Date.now(),
     };
 
-    messageService.broadcastMessage(announcement, serverPrivateKeyUint8);
+    messageService.broadcastMessage(announcement);
 
     // Return the JWT to the client
     res.status(200).json({ sessionToken: jwt });

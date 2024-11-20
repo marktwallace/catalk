@@ -1,6 +1,7 @@
 import { WebSocketServer } from 'ws';
 import { verifyJWT } from '../utils/jwt.js';
 import { handleExampleMessage } from './handlers/exampleHandler.js';
+import messageService from '../services/messageService.js';
 
 export function setupWebSocket(server) {
     const wss = new WebSocketServer({ server });
@@ -32,6 +33,7 @@ export function setupWebSocket(server) {
             ws.publicKey = payload.sub;
 
             console.log('New authenticated WebSocket connection');
+            messageService.addClient(ws);
 
             ws.on('message', (data) => {
                 const message = JSON.parse(data);
