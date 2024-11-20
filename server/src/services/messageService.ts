@@ -1,21 +1,23 @@
+// src/services/messageService.ts
 import { signMessage } from '../utils/sign.js';
 import WebSocket from 'ws';
 
 class MessageService {
+  private clients: Set<WebSocket>;
+
   constructor() {
-    this.clients = new Set(); // Use a Set to easily add/remove connected clients
+    this.clients = new Set();
   }
 
-  addClient(client) {
+  addClient(client: WebSocket): void {
     this.clients.add(client);
   }
 
-  removeClient(client) {
+  removeClient(client: WebSocket): void {
     this.clients.delete(client);
   }
 
-  broadcastMessage(message) {
-    // Sign the message
+  broadcastMessage(message: any): void {
     const signedMessage = signMessage(message);
 
     console.log('Broadcasting message:', signedMessage);

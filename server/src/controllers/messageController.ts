@@ -2,7 +2,11 @@
 import { Request, Response } from 'express';
 import messageService from '../services/messageService.js';
 
-export function postReply(req: Request, res: Response): void {
+interface RequestWithPublicKey extends Request {
+  publicKey?: string;
+}
+
+export function postReply(req: RequestWithPublicKey, res: Response): void {
   console.log('Received body:', req.body);
   const message = req.body;
 

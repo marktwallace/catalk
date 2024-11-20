@@ -14,7 +14,7 @@ router.post('/confirm-login', confirmLogin);
 
 // Protected routes
 router.get('/protected', authMiddleware, (req,res) => {
-    res.json({message: 'Protected resource', publicKey: req.publicKey});
+    res.json({message: 'Protected resource'});
 });
 router.post('/reply', authMiddleware, postReply);
 
