@@ -3,9 +3,7 @@
 
 The goal of this system is to allow users to host their own full-featured public chat server at low cost so that it can fit into the free tier of hosting services like fly.io.
 
-The server is simply a secure relay that authenticates clients and signs messages to prove origin and authenticity. The server does not store chat message history. However, clients do store history, and share it with other clients via WebRTC peer to peer data transfer. The message IDs sort in time order, and an online client can request message history for a given message ID from another client in order to fill in gaps in its own history. As users scroll back in channel history, their client will fill in the history via WebRTC transfers from other online clients. In this way, te collection of clients functions as a distributed database of channel history, eliminating the need for a centralized database (that would drive up hosting costs.)
-
-To anticipate situations when only one user is online, and they need recent history, the chat room owner may also choose to host 2 or more "virtual clients" that can share recent history (say 24 hours.) When other clients are online, these virtual clients will be the source of history of "last resort" to avoid running up bandwidth charges in the data center.
+The server is simply a secure relay that authenticates clients and signs messages to prove origin and authenticity. The server does not store chat message history. However, clients do store history, and share it with other clients via WebRTC peer to peer data transfer. The message IDs sort in time order, and an online client can request message history for a given message ID from another client in order to fill in gaps in its own history. As users scroll back in channel history, their client will fill in the history via WebRTC transfers from other online clients. In this way, persistent state in clients acts as a distributed database of channel history, eliminating the need for a centralized server-side database.
 
 ## Architecture
 
@@ -15,8 +13,13 @@ A primary function of the server is to certify the "facts" that are distributed 
 
 ### Login data
 
-The of the fundamental facts relayed by the server is a list of users currently online. Each item in the list should be a signed message that certifies that the client with a given public key has connected, with a attestation of their current level of privildge. (At this point, it would include whether the user has the ablity to create new message channel, and whether then can post new messages to any channel.)
+Since there is no auth database, the clients must authenticate with their own public key (Ed25519). The server replies to login requests with a nonce to confirm a connecting client's identity. Other clients can confirm that identity from their own message history.
 
+One of the fundamental facts relayed by the server is a list of users currently online. Each item in the list should be a signed message that certifies that the client with a given public key has connected, with a attestation of their current level of privildge. (At this point, it would include whether the user has the ablity to create new message channel, and whether then can post new messages to any channel.)
+
+### Virtual clients
+
+To anticipate situations when only one user is online, and they need recent history, the chat room owner may also choose to host 2 or more "virtual clients" that can share recent history (say 24 hours.) When other clients are online, these virtual clients will be the source of history of "last resort" to avoid running up bandwidth charges in the data center.
 
 ## Costs
 
