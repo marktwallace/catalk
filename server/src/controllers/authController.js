@@ -109,7 +109,7 @@ export function confirmLogin(req, res) {
       iat: Math.floor(Date.now() / 1000),
     };
 
-    const jwt = createJWT(header, payload, serverPrivateKeyUint8);
+    const jwt = createJWT(header, payload);
 
     // Delete the nonce as it's no longer needed
     nonces.delete(publicKey);

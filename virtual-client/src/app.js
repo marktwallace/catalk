@@ -1,6 +1,7 @@
 // client.js
 import fetch from 'node-fetch';
 import nacl from 'tweetnacl';
+import WebSocket from 'ws';
 
 const SERVER_URL = 'http://localhost:6765';
 
@@ -86,7 +87,37 @@ const SERVER_URL = 'http://localhost:6765';
     const sessionToken = confirmData.sessionToken;
     console.log('Login confirmed. Session Token:', sessionToken);
 
-    // Step 4: Access protected route
+    // Step 4: Connect to WebSocket
+    console.log('Connecting to WebSocket...');
+    const ws = new WebSocket(`${SERVER_URL}/ws`, {
+      headers: {
+        Authorization: `Bearer ${sessionToken}`,
+      },
+    });
+
+    ws.on('open', () => {
+      console.log('WebSocket connection opened');
+    });
+
+    ws.on('message', (data) => {
+      console.log('Received message:', data);
+    });
+
+    ws.onclose = (event) => {
+      if (event.code === 4001) {
+        console.error('Connection closed: No authorization header provided');
+        // Handle re-authentication or inform the user
+      } else if (event.code === 4002) {
+        console.error('Connection closed: Invalid or expired session token');
+        // Ask the user to log in again
+      } else {
+        console.error('Connection closed: ', event.code, event.reason);
+        // Handle other closures appropriately
+      }
+    };
+    
+
+    // Step 5: Access protected route
     console.log('Sending request to protected route...');
     const protectedResponse = await fetch(`${SERVER_URL}/api/protected`, {
       method: 'GET',

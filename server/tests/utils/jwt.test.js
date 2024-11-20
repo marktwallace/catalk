@@ -2,13 +2,9 @@
 const nacl = require('tweetnacl');
 nacl.util = require('tweetnacl-util');
 const { createJWT, verifyJWT } = require('../../src/utils/jwt');
+const { jwtVerify } = require('jose');
 
 test('JWT creation and verification', () => {
-  // Generate server key pair
-  const serverKeyPair = nacl.sign.keyPair();
-  const serverPrivateKeyUint8 = serverKeyPair.secretKey;
-  const serverPublicKeyUint8 = serverKeyPair.publicKey;
-
   // Create a JWT
   const header = {
     alg: 'EdDSA',
@@ -21,10 +17,10 @@ test('JWT creation and verification', () => {
     iat: Math.floor(Date.now() / 1000),
   };
 
-  const jwt = createJWT(header, payload, serverPrivateKeyUint8);
+  const jwt = createJWT(header, payload);
 
   // Verify the JWT
-  const verifiedPayload = verifyJWT(jwt, serverPublicKeyUint8);
+  const verifiedPayload = verifyJWT(jwtVerify);
 
   expect(verifiedPayload).not.toBeNull();
   expect(verifiedPayload.sub).toBe('test_subject');

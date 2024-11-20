@@ -1,10 +1,6 @@
 // middlewares/authMiddleware.js
 import { verifyJWT } from '../utils/jwt.js';
 
-// Load server's public key
-const SERVER_PUBLIC_KEY_BASE64 = process.env.SERVER_PUBLIC_KEY_BASE64;
-const serverPublicKeyUint8 = Uint8Array.from(Buffer.from(SERVER_PUBLIC_KEY_BASE64, 'base64'));
-
 export function authMiddleware(req, res, next) {
   const authHeader = req.headers['authorization'];
 
@@ -19,7 +15,7 @@ export function authMiddleware(req, res, next) {
   }
 
   try {
-    const payload = verifyJWT(token, serverPublicKeyUint8);
+    const payload = verifyJWT(token);
 
     if (!payload) {
       return res.status(401).json({ error: 'Invalid or expired session token' });

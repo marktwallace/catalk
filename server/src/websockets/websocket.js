@@ -1,43 +1,61 @@
 import { WebSocketServer } from 'ws';
-import messageService from '../services/messageService.js';
+import { verifyJWT } from '../utils/jwt.js';
+import { handleExampleMessage } from './handlers/exampleHandler.js';
 
 export function setupWebSocket(server) {
     const wss = new WebSocketServer({ server });
 
-    wss.on('connection', (ws) => {
-        console.log('New WebSocket connection');
+    wss.on('connection', (ws, req) => {
+        // Extract the authorization header from the request
+        const authHeader = req.headers['authorization'];
+        if (!authHeader) {
+            ws.close(4001, 'No authorization header provided');
+            return;
+        }
 
-        // Add the new client to the MessageService client list
-        messageService.addClient(ws);
+        const token = authHeader.split(' ')[1]; // expecting 'Bearer sessionToken'
 
-        ws.on('message', (data) => {
-            const message = JSON.parse(data);
-            console.log('Received message:', message);
+        if (!token) {
+            ws.close(4002, 'Invalid authorization header format');
+            return;
+        }
 
-            // Dispatch message based on type
-            switch (message.type) {
-                case 'example':
-                    handleExampleMessage(message.payload, ws);
-                    break;
-                default:
-                    ws.send(JSON.stringify({ error: 'Unknown message type' }));
+        try {
+            // Verify the JWT
+            const payload = verifyJWT(token);
+            if (!payload) {
+                ws.close(4003, 'Invalid or expired session token');
+                return;
             }
-        });
 
-        ws.on('close', () => {
-            // Remove the client from the MessageService client list on disconnect
-            messageService.removeClient(ws);
-            console.log('WebSocket connection closed');
-        });
+            // Attach the publicKey to the WebSocket object for use in message handlers
+            ws.publicKey = payload.sub;
+
+            console.log('New authenticated WebSocket connection');
+
+            ws.on('message', (data) => {
+                const message = JSON.parse(data);
+                console.log('Received message:', message);
+
+                // Dispatch message based on type
+                switch (message.type) {
+                    case 'example':
+                        handleExampleMessage(message.payload, ws);
+                        break;
+                    default:
+                        ws.send(JSON.stringify({ error: 'Unknown message type' }));
+                }
+            });
+
+            ws.on('close', () => {
+                console.log('WebSocket connection closed');
+            });
+
+        } catch (error) {
+            console.error('JWT verification error:', error.message);
+            ws.close(4001, 'Invalid or expired session token');
+        }
     });
 
     return wss;
 }
-
-export function handleExampleMessage(message, ws) {
-  console.log('Handling example message:', message);
-
-  // Example response logic
-  const response = { type: 'example', payload: 'This is an example response' };
-  ws.send(JSON.stringify(response));
-};
